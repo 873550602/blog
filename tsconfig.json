@@ -16,7 +16,8 @@
     "types": [
       "webpack-env",
       "jest",
-      "vuetify"
+      "vuetify",
+      "md5",
     ],
     "paths": {
       "@/*": [
@@ -35,8 +36,9 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx"
-, "src/plugins/vuetify.ts"  ],
+    "tests/**/*.tsx",
+    "src/plugins/vuetify.ts"
+  ],
   "exclude": [
     "node_modules"
   ]
