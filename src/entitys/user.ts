@@ -1,9 +1,7 @@
-import { User } from '@/interface';
-
 export default class UserEntity implements User {
   id: number;
   account: string;
-  labels: string[];
+  labels?: string[];
   avatarUrl?: string;
   realName?: string;
   phoneNumbers?: string[];
@@ -11,7 +9,7 @@ export default class UserEntity implements User {
   constructor(
     id: number,
     account: string,
-    labels: string[],
+    labels?: string[],
     avatarUrl?: string,
     realName?: string,
     phoneNumbers?: string[],

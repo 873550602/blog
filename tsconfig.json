@@ -18,6 +18,8 @@
       "jest",
       "vuetify",
       "md5",
+      "simp-toast",
+      // "./src/types/index.d.ts"
     ],
     "paths": {
       "@/*": [
@@ -28,7 +30,7 @@
       "esnext",
       "dom",
       "dom.iterable",
-      "scripthost"
+      "scripthost",
     ]
   },
   "include": [
@@ -37,7 +39,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    "src/plugins/vuetify.ts"
+    "src/plugins/vuetify.ts",
   ],
   "exclude": [
     "node_modules"

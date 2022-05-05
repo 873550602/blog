@@ -6,7 +6,7 @@
       class="flex-grow-0 pa-10 d-flex flex-column"
       rounded
     >
-      <div class="text-h4 text-center">注册</div>
+      <div class="text-h4 text-center">修改密码</div>
       <v-form ref="formRef" class="flex-grow-1 mt-5">
         <v-text-field
           label="旧密码"
@@ -62,7 +62,10 @@
   </div>
 </template>
 <script lang="ts">
+import { changePassword } from '@/lib/httpApi';
+import md5 from 'md5';
 import Vue from 'vue';
+import { mapState, mapActions } from 'vuex';
 export default Vue.extend({
   data() {
     return {
@@ -95,10 +98,25 @@ export default Vue.extend({
       },
     };
   },
+  computed: {
+    ...mapState(['currUser']),
+  },
   methods: {
-    submit() {
+    ...mapActions(['logout']),
+    async submit() {
       if ((this.$refs.formRef as any).validate()) {
         console.log(this.user);
+        const user = {
+          id: this.currUser.user.id,
+          newPassword: md5(this.user.password),
+          oldPassword: md5(this.user.oldPassword),
+        };
+        const r = await changePassword(user);
+        if (r.data.code === 0) {
+          this.$toast.success('密码修改成功');
+          this.logout();
+          this.$router.push({ name: 'login' });
+        }
       }
     },
   },

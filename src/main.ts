@@ -4,14 +4,15 @@ import router from './router';
 import store from './store';
 import vuetify from './plugins/vuetify';
 import '@/assets/css/com.scss';
-// import toast from '@/plugins/simple-toast/src/index'
-import toast from 'simp-toast'
+import simpToast from 'simp-toast'
 Vue.config.productionTip = false;
+Vue.use(simpToast)
 
-Vue.use((toast as any))
-new Vue({
+
+const vm = new Vue({
   router,
   store,
   vuetify,
   render: (h) => h(App),
 }).$mount('#app');
+export const Toast = vm.$toast 

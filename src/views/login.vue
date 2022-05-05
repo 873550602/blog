@@ -51,8 +51,9 @@
 </template>
 <script lang="ts">
 import Vue from 'vue';
-import { CurrUser, User } from '@/interface';
 import { mapMutations } from 'vuex';
+import { login, test } from '@/lib/httpApi';
+import md5 from 'md5';
 import UserEntity from '@/entitys/user';
 export default Vue.extend({
   data() {
@@ -76,19 +77,21 @@ export default Vue.extend({
   },
   methods: {
     ...mapMutations(['setCurrUser']),
-    login() {
+    async login() {
       if ((this.$refs.formRef as any).validate()) {
-        console.log(this.user);
-        const user: User = {
-          id: 1,
-          labels: ['javascript'],
+        const user = {
           account: this.user.account,
+          password: md5(this.user.password),
         };
-        this.setCurrUser({
-          isLogin: true,
-          user: UserEntity.fromJson(user),
-        } as CurrUser);
-        this.$router.push({ name: 'home' });
+        const r = await login(user);
+        if (r?.data.code === 0) {
+          this.$toast.success('登录成功');
+          this.setCurrUser({
+            isLogin: true,
+            user: UserEntity.fromJson(r.data.data),
+          });
+          this.$router.push({ name: 'home' });
+        }
       }
     },
   },

@@ -58,7 +58,7 @@
               </v-list-item>
               <v-list-item
                 class="red red--lighten-4 white--text"
-                @click="logout"
+                @click="_logout"
               >
                 <v-icon size="12" class="mr-2 white--text"
                   >fa fa-arrow-right-from-bracket</v-icon
@@ -84,8 +84,11 @@
 </template>
 <script lang="ts">
 import { labels } from '@/lib/dictionary';
+import { test } from '@/lib/httpApi';
 import Vue from 'vue';
-import { mapGetters, mapMutations, mapState } from 'vuex';
+import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+import Constant from './lib/const';
+import StorageFactory from './lib/storage';
 export default Vue.extend({
   data() {
     return {
@@ -94,17 +97,23 @@ export default Vue.extend({
   },
   methods: {
     ...mapMutations(['setCurrUser']),
-    logout() {
-      this.setCurrUser({});
+    ...mapActions(['logout']),
+    initUserInfo() {
+      const user = StorageFactory.sessionStorage.get(Constant.userInfoKey);
+      if (user) this.setCurrUser(user);
+    },
+    _logout() {
+      this.logout();
       this.$router.push({ name: 'home' });
     },
     showMessage() {
-      (this as any).$toast.warn('xxxxx', {
-        close: true,
-        duration: -1,
-        showCount: -1,
-        deep: 1,
-        position:'ct',
+      // test()
+      const id = this.$toast.error('xxxxx', {
+        // close: true,
+        // duration: -1,
+        // showCount: -1,
+        // deep: 1,
+        // position: 'ct',
       });
     },
   },
@@ -114,6 +123,10 @@ export default Vue.extend({
   },
   components: {
     Logo: () => import('@/components/logo.vue'),
+  },
+  created() {
+    // 从本地缓存初始化用户信息
+    this.initUserInfo();
   },
 });
 </script>

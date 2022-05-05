@@ -1,4 +1,3 @@
-import { ArrayOrObject } from '@/interface';
 type Ttype = ArrayOrObject
 type Vtype = ArrayOrObject | undefined
 const vEmail =

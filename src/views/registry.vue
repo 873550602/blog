@@ -123,8 +123,9 @@ export default Vue.extend({
           ...this.user,
         };
         user.password = md5(user.password);
-        const r = await registry('/registry', user);
-        if(r.data.code === 0){
+        const r = await registry(user);
+        if(r?.data.code === 0){
+          this.$toast.success("注册成功")
           this.$router.push({name:'login'})
         }
       }

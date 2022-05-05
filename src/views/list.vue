@@ -25,10 +25,6 @@
 </template>
 <script lang="ts">
 import Vue from 'vue';
-import { Article } from '@/interface';
-type Articles = {
-  [key: number]: Article;
-};
 export default Vue.extend({
   props: {
     category: {
@@ -38,7 +34,7 @@ export default Vue.extend({
   },
   data() {
     return {
-      articles: [] as Articles,
+      articles: [] as Article[],
     };
   },
   created() {
@@ -52,7 +48,7 @@ export default Vue.extend({
         createTime: '2022-01-01 12:11:36',
         category: 'javascript',
       },
-    ] as Articles;
+    ];
     this.articles = list;
   },
 });

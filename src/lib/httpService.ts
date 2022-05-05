@@ -3,7 +3,9 @@ import axios, {
   AxiosRequestHeaders,
   AxiosResponse,
 } from 'axios';
-
+import store from '@/store'
+import router from '@/router'
+import { Toast } from '@/main';
 export default class HttpService {
   static getAxios(
     url: string,
@@ -24,18 +26,26 @@ export default class HttpService {
 
   private static onRequest(config: AxiosRequestConfig) {
     // do something
-    debugger;
+    // debugger;
     return config;
   }
 
-  private static onResponse(response: AxiosResponse<any, any>) {
-    // do something
-    debugger;
+
+  private static onResponse(response: AxiosResponse<ResponseData, any>) {
+    if (response.data.code !== 0) {
+      Toast.error(response.data.message)
+      return;
+    }
     return response;
   }
 
   private static onError(err: any) {
     debugger;
+    if (err.response.status === 401) {
+      // 用户没有登录或登录权限过期
+      store.dispatch("logout")
+      router.push({ name: 'login' })
+    }
     return Promise.reject(err.response);
   }
 }

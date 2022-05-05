@@ -87,17 +87,15 @@
   </div>
 </template>
 <script lang="ts">
-import { User } from '@/interface';
 import Vue from 'vue';
 import { mapState } from 'vuex';
 import { labels } from '@/lib/dictionary';
 import { deepClone, validEmail, validPhone } from '@/lib/utils';
-import UserEntity from '@/entitys/user';
 export default Vue.extend({
-  data() {
+  data(): { [key: string]: any; user: User | null } {
     return {
       labels,
-      user: {} as User,
+      user: null,
       isEdit: false,
       userRules: {
         email: [(v: string) => (!!v && validEmail(v)) || '输入邮箱无效'],
@@ -134,7 +132,7 @@ export default Vue.extend({
       if (list.length > 3) list.pop();
     },
     deleteLabel(index: number) {
-      this.user.labels.splice(index, 1);
+      this.user?.labels?.splice(index, 1);
     },
   },
   components: {

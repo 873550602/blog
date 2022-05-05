@@ -1,6 +1,9 @@
 module.exports = {
   publicPath: '/',
   transpileDependencies: ['vuetify'],
+  outputDir: "dist",
+  configureWebpack:{
+  },
   devServer: {
     proxy: {
       '/api': {
