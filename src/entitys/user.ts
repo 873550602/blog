@@ -2,7 +2,7 @@ export default class UserEntity implements User {
   id: number;
   account: string;
   labels?: string[];
-  avatarUrl?: string;
+  avatar?: string;
   realName?: string;
   phoneNumbers?: string[];
   email?: string;
@@ -10,7 +10,7 @@ export default class UserEntity implements User {
     id: number,
     account: string,
     labels?: string[],
-    avatarUrl?: string,
+    avatar?: string,
     realName?: string,
     phoneNumbers?: string[],
     email?: string
@@ -19,7 +19,7 @@ export default class UserEntity implements User {
     this.account = account;
     this.realName = realName;
     this.labels = labels;
-    this.avatarUrl = avatarUrl;
+    this.avatar = avatar;
     this.phoneNumbers = phoneNumbers;
     this.email = email;
   }
@@ -29,7 +29,7 @@ export default class UserEntity implements User {
       obj.id,
       obj.account,
       obj.labels,
-      obj.avatarUrl,
+      obj.avatar,
       obj.realName,
       obj.phoneNumbers,
       obj.email
@@ -41,7 +41,7 @@ export default class UserEntity implements User {
       id: entity.id,
       account: entity.account,
       labels: entity.labels,
-      avatarUrl: entity.avatarUrl,
+      avatar: entity.avatar,
       realName: entity.realName,
       phoneNumbers: entity.phoneNumbers,
       email: entity.email,

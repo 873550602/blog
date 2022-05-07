@@ -26,7 +26,7 @@
         </v-responsive>
         <div v-if="isLogin">
           <v-avatar class="ml-10" color="grey lighten-2" size="32">
-            <v-img src="favicon.ico">
+            <v-img :src="currUser.user.avatar">
               <template #placeholder>
                 <v-icon class="grey--text text--darken-2"
                   >fa-solid fa-user-tie</v-icon
@@ -84,7 +84,7 @@
 </template>
 <script lang="ts">
 import { labels } from '@/lib/dictionary';
-import { test } from '@/lib/httpApi';
+import { logout, test } from '@/lib/httpApi';
 import Vue from 'vue';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import Constant from './lib/const';
@@ -102,9 +102,12 @@ export default Vue.extend({
       const user = StorageFactory.sessionStorage.get(Constant.userInfoKey);
       if (user) this.setCurrUser(user);
     },
-    _logout() {
-      this.logout();
-      this.$router.push({ name: 'home' });
+    async _logout() {
+      const r = await logout(this.currUser.user.id);
+      if (r.data.code === 0) {
+        this.logout();
+        this.$router.push({ name: 'home' });
+      }
     },
     showMessage() {
       // test()

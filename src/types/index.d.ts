@@ -17,7 +17,7 @@ declare interface StringObj {
     id: number;
     account: string;
     labels?: string[];
-    avatarUrl?: string;
+    avatar?: string;
     realName?: string;
     phoneNumbers?: string[];
     email?: string;

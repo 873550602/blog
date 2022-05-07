@@ -41,7 +41,7 @@ export default class HttpService {
 
   private static onError(err: any) {
     debugger;
-    if (err.response.status === 401) {
+    if (err.response?.status === 401) {
       // 用户没有登录或登录权限过期
       store.dispatch("logout")
       router.push({ name: 'login' })
