@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^0.27.2",
     "core-js": "^3.8.3",
+    "markdown-it-vue": "^1.1.7",
     "md5": "^2.3.0",
     "simp-toast": "^0.1.9",
     "vue": "^2.6.14",

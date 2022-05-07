@@ -23,5 +23,8 @@ export default new Vuetify({
         info: colors.cyan,
       },
     },
+    options: {
+      customProperties:true
+    }
   },
 });
