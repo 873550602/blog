@@ -54,7 +54,6 @@ import Vue from 'vue';
 import { mapMutations } from 'vuex';
 import { login, test } from '@/lib/httpApi';
 import md5 from 'md5';
-import UserEntity from '@/entitys/user';
 export default Vue.extend({
   data() {
     return {
@@ -88,7 +87,7 @@ export default Vue.extend({
           this.$toast.success('登录成功');
           this.setCurrUser({
             isLogin: true,
-            user: UserEntity.fromJson(r.data.data),
+            user: r.data.data,
           });
           this.$router.push({ name: 'home' });
         }

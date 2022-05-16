@@ -1,11 +1,12 @@
 <template>
   <div class="main">
-    <v-btn color="primary" fab class="add-blog">
+    <v-btn color="primary" fab class="add-blog" @click="isOpen = true">
       <v-icon>fa fa-plus</v-icon>
     </v-btn>
-    <add-blog class="add-blog-content">
-      
-    </add-blog>
+    <transition :duration="1000" name="scale">
+      <add-blog v-if="isOpen" class="add-blog-content" @close="closeEvent">
+      </add-blog>
+    </transition>
     <v-sheet class="content-box" rounded>
       <v-list class="px-1">
         <v-list-item
@@ -22,10 +23,10 @@
             <v-list-item-title class="text-h5">{{
               article.title
             }}</v-list-item-title>
-            <v-list-item-subtitle>{{ article.subtitle }}</v-list-item-subtitle>
+            <v-list-item-subtitle>{{ article.summary }}</v-list-item-subtitle>
           </v-list-item-content>
           <v-list-item-action-text>{{
-            article.createTime
+            article.createTime | formatDate
           }}</v-list-item-action-text>
         </v-list-item>
       </v-list>
@@ -33,6 +34,7 @@
   </div>
 </template>
 <script lang="ts">
+import { getArticles } from '@/lib/httpApi';
 import Vue from 'vue';
 export default Vue.extend({
   props: {
@@ -43,51 +45,47 @@ export default Vue.extend({
   },
   data() {
     return {
-      articles: [] as Article[],
+      isOpen: false,
+      articles: [] as Article[] | undefined,
+      articlePageObj: {
+        curr: 1,
+        rows: 10,
+        object: {
+          label: this.category,
+        },
+      } as Page<{ label: string }>,
     };
+  },
+  methods: {
+    async getArticles() {
+      const r = await getArticles(this.articlePageObj);
+      this.articles = r.data.data?.list;
+    },
+    closeEvent(v?: boolean) {
+      this.isOpen = false;
+      if (v) {
+        this.getArticles();
+      }
+    },
   },
   components: {
     AddBlog: () => import('@/components/add-blog.vue'),
   },
   created() {
-    const list = [
-      {
-        id: 1,
-        title: 'js垃圾回收机制',
-        subtitle: '深入介绍垃圾回收原理',
-        content: 'xxxxxxxxxxxsdfsdfsdfssdfsfa',
-        author: 'hxx',
-        createTime: '2022-01-01 12:11:36',
-        category: 'javascript',
-      },
-      {
-        id: 2,
-        title: 'js垃圾回收机制',
-        subtitle: '深入介绍垃圾回收原理',
-        content: 'xxxxxxxxxxxsdfsdfsdfssdfsfa',
-        author: 'hxx',
-        createTime: '2022-01-01 12:11:36',
-        category: 'javascript',
-      },
-      {
-        id: 3,
-        title: 'js垃圾回收机制',
-        subtitle: '深入介绍垃圾回收原理',
-        content: 'xxxxxxxxxxxsdfsdfsdfssdfsfa',
-        author: 'hxx',
-        createTime: '2022-01-01 12:11:36',
-        category: 'javascript',
-      },
-    ];
-    this.articles = list;
+    this.getArticles();
+  },
+  beforeRouteUpdate(to, from, next) {
+    this.articlePageObj.object.label = to.params.category;
+    this.getArticles();
+    next();
   },
 });
 </script>
 <style lang="scss" scoped>
 .add-blog {
   position: fixed;
-  right: 50px;
-  bottom: 50px;
+  right: 10%;
+  bottom: 15%;
 }
 .add-blog-content {
   position: fixed;
@@ -97,6 +95,8 @@ export default Vue.extend({
   height: 100%;
   background-color: #ffffff;
   z-index: 9;
+  overflow: hidden;
+  transform-origin: 88% 80%;
 }
 .content-box {
   margin: 0 auto;
@@ -114,5 +114,15 @@ export default Vue.extend({
       box-shadow: 0 0 3px rgba(100, 100, 100, 0.8);
     }
   }
+}
+.scale-enter-active,
+.scale-leave-active {
+  transform-origin: right 50px bottom 50px;
+  transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+}
+.scale-enter,
+.scale-leave-to {
+  transform: scale(0, 0);
+  opacity: 0;
 }
 </style>

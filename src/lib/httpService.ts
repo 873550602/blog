@@ -31,8 +31,9 @@ export default class HttpService {
   }
 
 
-  private static onResponse(response: AxiosResponse<ResponseData, any>) {
+  private static onResponse(response: AxiosResponse<ResponseData<any>, any>) {
     if (response.data.code !== 0) {
+      debugger
       Toast.error(response.data.message)
       return;
     }

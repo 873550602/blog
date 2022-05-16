@@ -5,19 +5,17 @@ import store from './store';
 import vuetify from './plugins/vuetify';
 import '@/assets/css/com.scss';
 import simpToast from 'simp-toast'
-import markdownIt from 'markdown-it-vue'
-import 'markdown-it-vue/dist/markdown-it-vue.css'
+import { MarkdownViewer } from 'md-simple-editor'
+import moment from 'moment';
 Vue.config.productionTip = false;
 Vue.use(simpToast)
-// markdown-it
-Vue.component('markdown-it',Vue.extend(markdownIt))
-
-
+Vue.component('md-view', MarkdownViewer)
+Vue.filter('formatDate', (d: number | string | Date, fmt = 'yyyy-MM-DD hh:mm:ss'):string => moment(new Date(d)).format(fmt))
 const vm = new Vue({
   router,
   store,
   vuetify,
   render: (h) => h(App),
 }).$mount('#app');
-export const Toast = vm.$toast 
+export const Toast = vm.$toast
 

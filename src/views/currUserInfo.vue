@@ -144,7 +144,6 @@ import { mapMutations, mapState } from 'vuex';
 import { labels, sexes } from '@/lib/dictionary';
 import { deepClone, validEmail, validPhone } from '@/lib/utils';
 import { changeUserInfo, getUserInfoById, saveAvatar } from '@/lib/httpApi';
-import UserEntity from '@/entitys/user';
 export default Vue.extend({
   data(): { [key: string]: any; user: User | null } {
     return {
@@ -153,7 +152,7 @@ export default Vue.extend({
       // 修改信息时的临时对象
       tempUserInfo: {},
       // 用户信息对象
-      userInfo: {} as UserEntity,
+      userInfo: {} as User,
       sexes,
       labels,
       user: null,
@@ -231,10 +230,10 @@ export default Vue.extend({
       const r = await saveAvatar(this.currUser.user.id, formData);
       if (r.data.code === 0) {
         this.$toast.success('头像跟换成功');
-        this.userInfo.avatar = r.data.data.path;
+        this.userInfo.avatar = r.data.data?.path;
         // 更新store的头像
         const currUser = this.currUser;
-        currUser.user.avatar = r.data.data.path;
+        currUser.user.avatar = r.data.data?.path;
         this.setCurrUser(currUser);
 
         this.removeAvatarAndFile();

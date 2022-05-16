@@ -19,6 +19,7 @@
       "vuetify",
       "md5",
       "simp-toast",
+      "lodash",
       // "./src/types/index.d.ts"
     ],
     "paths": {

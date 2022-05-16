@@ -111,13 +111,13 @@ export default Vue.extend({
     },
     showMessage() {
       // test()
-      const id = this.$toast.error('xxxxx', {
+      // const id = this.$toast.error('xxxxx', {
         // close: true,
         // duration: -1,
         // showCount: -1,
         // deep: 1,
         // position: 'ct',
-      });
+      // });
     },
   },
   computed: {
