@@ -28,6 +28,7 @@
         :content="article.collectionVolume?.toString()"
       >
         <v-sheet
+          @click="collectArticle(collectArticle_)"
           class="d-flex justify-center align-center mouse-pointer"
           v-ripple
           elevation="1"
@@ -35,7 +36,7 @@
           height="50"
           rounded="circle"
         >
-          <v-icon color="#999999" size="20">fa-solid fa-heart</v-icon>
+          <v-icon :color="collectColor" size="20">fa-solid fa-heart</v-icon>
         </v-sheet>
       </v-badge>
       <v-badge
@@ -113,6 +114,7 @@
                 class="comment-btn"
                 color="primary"
                 :disabled="!commentContent.length"
+                @click="createComment(article.id)"
                 >发表评论</v-btn
               >
             </div>
@@ -123,6 +125,37 @@
             class="text-6 mt-5 mb-3 font-weight-bold grey--text text--darken-3"
           >
             全部评论<span class="ml-2">0</span>
+            <div class="comment-list mt-5">
+              <div
+                class="comment-item my-5"
+                v-for="comment of comments"
+                :key="comment.id"
+              >
+                <div class="d-flex align-center mb-3">
+                  <v-avatar size="40">
+                    <v-img :src="comment.commentator.avatar"></v-img>
+                  </v-avatar>
+                  <span class="ml-2">{{ comment.commentator.account }}</span>
+                  <v-spacer></v-spacer>
+                  <span class="text--secondary font-weight-light">{{
+                    comment.createTime | formatDate('yyyy-MM-DD')
+                  }}</span>
+                </div>
+                <div
+                  class="
+                    mt-3
+                    ml-12
+                    pa-3
+                    grey
+                    lighten-4
+                    comment-box
+                    text-subtitle-1
+                  "
+                >
+                  {{ comment.content }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </v-sheet>
@@ -142,6 +175,10 @@ import {
   followUserById,
   getUserInfoById,
   likeArticleById,
+  collectArticleById,
+  incrementReading,
+  getCommentById,
+  createComment,
 } from '@/lib/httpApi';
 import { mapMutations, mapState } from 'vuex';
 import _ from 'lodash';
@@ -152,6 +189,7 @@ export default Vue.extend({
   },
   data() {
     return {
+      commentType: 1 as 1 | 2,
       article: {
         likeds: 0,
       } as Article,
@@ -159,6 +197,7 @@ export default Vue.extend({
       commentContent: '',
       isShowCommentBtn: false,
       content: '# contente',
+      comments: [] as Array<Comment>,
     };
   },
   computed: {
@@ -175,6 +214,11 @@ export default Vue.extend({
         ? 'var(--v-secondary-base)'
         : '#999999';
     },
+    collectColor(): string {
+      return this.article.collectionIds?.includes(this.currUser.user.id)
+        ? 'var(--v-secondary-base)'
+        : '#999999';
+    },
   },
   methods: {
     ...mapMutations(['setCurrUser']),
@@ -182,9 +226,36 @@ export default Vue.extend({
       const r1 = await getArticleById(this.id);
       if (r1.data.code !== 0) return;
       this.article = r1.data.data!;
+      this.incrementReading();
+      this.getComment(this.article.id);
       const r2 = await getUserInfoById(r1.data.data!.author);
       if (r2.data.code !== 0) return;
       this.articleUser = r2.data.data!;
+    },
+    async incrementReading() {
+      let reading = this.article.reading || 0;
+      const r = await incrementReading(this.article.id);
+      if (r.data.code === 0) {
+        this.article.reading = ++reading;
+      }
+    },
+    async getComment(id: string | number) {
+      const r = await getCommentById(id);
+      if (r.data.code === 0) {
+        this.comments = r.data.data!;
+      }
+    },
+    async createComment(id: string | number) {
+      const r = await createComment({
+        type: this.commentType,
+        commentator: this.currUser.user.id,
+        commented: id,
+        content: this.commentContent,
+      });
+      if (r.data.code === 0) {
+        this.commentContent = '';
+        this.getComment(id);
+      }
     },
     async followUser_() {
       this.articleUser.followeds ??= [];
@@ -225,7 +296,34 @@ export default Vue.extend({
         });
       }
     },
+    async collectArticle_() {
+      let count = this.article.collectionVolume || 0;
+      const collects = this.article.collectionIds || [];
+      const userId = this.currUser.user.id;
+      const articleId = this.article.id;
+      const r = await collectArticleById(articleId);
+      if (r.data.code === 0) {
+        if (collects.includes(userId)) {
+          _.remove(collects, (id: string) => id === userId);
+          this.$set(this.article, 'collectionVolume', --count);
+        } else {
+          collects.push(userId);
+          this.$set(this.article, 'collectionVolume', ++count);
+        }
+        this.article.collectionIds = [];
+        this.$nextTick(() => {
+          this.article.collectionIds = collects;
+        });
+      }
+    },
     likeArticle: _.debounce(
+      function (fun) {
+        fun();
+      },
+      3000,
+      { leading: true, trailing: false }
+    ),
+    collectArticle: _.debounce(
       function (fun) {
         fun();
       },
@@ -274,6 +372,14 @@ export default Vue.extend({
 .comment-textarea {
   z-index: 1;
   background-color: #ffffff;
+}
+
+.comment-list {
+  .comment-item {
+    .comment-box {
+      border-radius: 4px;
+    }
+  }
 }
 
 .comment-fade-enter,
