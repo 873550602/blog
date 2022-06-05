@@ -204,7 +204,7 @@ export default Vue.extend({
         return;
       }
       // 设置临时头像文件
-      var fr = new FileReader();
+      const fr = new FileReader();
       fr.readAsDataURL(file);
       fr.onloadend = () => {
         this.tempAvatar = fr.result;

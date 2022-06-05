@@ -69,7 +69,7 @@ export default Vue.extend({
     },
   },
   components: {
-    AddBlog: () => import('@/components/add-blog.vue'),
+    AddBlog: () => import('@/components/addBlog.vue'),
   },
   created() {
     this.getArticles();

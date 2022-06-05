@@ -44,9 +44,10 @@
         color="#90A4AEcc"
         class="mt-5"
         overlap
-        :content="article.commentVolume?.toString()"
+        :content="comments.length.toString()"
       >
         <v-sheet
+          @click="scrollToAllComment"
           class="d-flex justify-center align-center mouse-pointer"
           v-ripple
           elevation="1"
@@ -73,7 +74,7 @@
         <div class="text-h2 text-center">{{ article.title }}</div>
         <div class="info-box d-flex mt-5">
           <v-avatar color="#eeeeee" rounded="50px">
-            <v-img src="@/assets/logo.png"></v-img>
+            <v-img :src="articleUser.avatar"></v-img>
           </v-avatar>
           <div class="text-info flex-grow-1 ml-3 mt-1 d-flex flex-column">
             <div class="author-name font-weight-bold">
@@ -95,67 +96,30 @@
       </v-sheet>
       <v-sheet class="comment-box mt-5 py-5 px-5" rounded>
         <div class="text-h5 font-weight-black mb-5">评论</div>
-        <div class="edit-box text-right">
-          <v-btn text color="primary" small class="mb-1">使用markdown</v-btn>
-          <v-textarea
-            class="comment-textarea"
-            @focus="isShowCommentBtn = true"
-            @blur="commentContent.length || (isShowCommentBtn = false)"
-            hide-details
-            outlined
-            cols="30"
-            rows="5"
-            v-model="commentContent"
-            placeholder="请输入评论..."
-          ></v-textarea>
-          <transition name="comment-fade">
-            <div class="bottom-bar text-right mt-3" v-show="isShowCommentBtn">
-              <v-btn
-                class="comment-btn"
-                color="primary"
-                :disabled="!commentContent.length"
-                @click="createComment(article.id)"
-                >发表评论</v-btn
-              >
-            </div>
-          </transition>
-        </div>
-        <div class="all-comment" style="height: 1500px">
-          <div
-            class="text-6 mt-5 mb-3 font-weight-bold grey--text text--darken-3"
-          >
-            全部评论<span class="ml-2">0</span>
-            <div class="comment-list mt-5">
-              <div
-                class="comment-item my-5"
-                v-for="comment of comments"
-                :key="comment.id"
-              >
-                <div class="d-flex align-center mb-3">
-                  <v-avatar size="40">
-                    <v-img :src="comment.commentator.avatar"></v-img>
-                  </v-avatar>
-                  <span class="ml-2">{{ comment.commentator.account }}</span>
-                  <v-spacer></v-spacer>
-                  <span class="text--secondary font-weight-light">{{
-                    comment.createTime | formatDate('yyyy-MM-DD')
-                  }}</span>
-                </div>
-                <div
-                  class="
-                    mt-3
-                    ml-12
-                    pa-3
-                    grey
-                    lighten-4
-                    comment-box
-                    text-subtitle-1
-                  "
-                >
-                  {{ comment.content }}
-                </div>
-              </div>
-            </div>
+        <div class="all-comment" style="min-height: 300px">
+          <editor
+            ref="articleCommentRef"
+            class="comment-editor"
+            @save="submitComment(article.id, ...arguments)"
+          ></editor>
+          <div class="hot-comment text-h6 py-10">
+            热门评论
+            <v-icon class="ml-1" color="error" small>fa-solid fa-fire</v-icon>
+            <comment-list
+              :comments="hotComments"
+              @deleteItem="deleteComment"
+              @likeItem="likeComment(likeComment_, ...arguments)"
+              @createItem="createComment"
+            ></comment-list>
+          </div>
+          <div class="text-h6 mt-5 mb-3 grey--text text--darken-3">
+            全部评论<span class="ml-2">{{ totalCommentNumber }}</span>
+            <comment-list
+              :comments="comments"
+              @deleteItem="deleteComment"
+              @likeItem="likeComment(likeComment_, ...arguments)"
+              @createItem="createComment"
+            ></comment-list>
           </div>
         </div>
       </v-sheet>
@@ -169,7 +133,7 @@
   </div>
 </template>
 <script lang="ts">
-import Vue, { VueConstructor } from 'vue';
+import Vue from 'vue';
 import {
   getArticleById,
   followUserById,
@@ -177,11 +141,19 @@ import {
   likeArticleById,
   collectArticleById,
   incrementReading,
-  getCommentById,
+  getCommentsById,
+  getHotCommentsById,
   createComment,
+  likeCommentById,
+  deleteComment,
 } from '@/lib/httpApi';
 import { mapMutations, mapState } from 'vuex';
-import _ from 'lodash';
+import _, { bind } from 'lodash';
+import { EditorType } from '@/lib/enum';
+interface Comment_ extends Comment {
+  isEdit?: boolean;
+  children?: Comment[];
+}
 export default Vue.extend({
   props: {
     category: String,
@@ -189,15 +161,13 @@ export default Vue.extend({
   },
   data() {
     return {
-      commentType: 1 as 1 | 2,
+      EditorType,
       article: {
         likeds: 0,
       } as Article,
       articleUser: {} as User,
-      commentContent: '',
-      isShowCommentBtn: false,
-      content: '# contente',
-      comments: [] as Array<Comment>,
+      comments: [] as Array<Comment_>,
+      hotComments: [] as Array<Comment_>,
     };
   },
   computed: {
@@ -210,7 +180,7 @@ export default Vue.extend({
         : '关注';
     },
     likeColor(): string {
-      return this.currUser.user.likes.includes(this.article.id)
+      return this.article.likedIds?.includes(this.currUser.user.id)
         ? 'var(--v-secondary-base)'
         : '#999999';
     },
@@ -219,15 +189,35 @@ export default Vue.extend({
         ? 'var(--v-secondary-base)'
         : '#999999';
     },
+    totalCommentNumber(): number {
+      let count = 0;
+      this.comments.forEach((e: Comment_) => {
+        count++;
+        e.children!.forEach((v) => {
+          count++;
+        });
+      });
+      return count;
+    },
   },
   methods: {
     ...mapMutations(['setCurrUser']),
+    scrollToAllComment() {
+      const el = document.querySelector('.comment-box');
+      el?.scrollIntoView({ behavior: 'smooth' });
+    },
+    submitComment(id: string | number, content: string, editor: EditorType) {
+      this.createComment(id, content, editor, () => {
+        (this.$refs.articleCommentRef as any).clear();
+      });
+    },
     async getArticle() {
       const r1 = await getArticleById(this.id);
       if (r1.data.code !== 0) return;
       this.article = r1.data.data!;
       this.incrementReading();
       this.getComment(this.article.id);
+      this.getHotComment(this.article.id);
       const r2 = await getUserInfoById(r1.data.data!.author);
       if (r2.data.code !== 0) return;
       this.articleUser = r2.data.data!;
@@ -240,21 +230,33 @@ export default Vue.extend({
       }
     },
     async getComment(id: string | number) {
-      const r = await getCommentById(id);
+      const r = await getCommentsById(id);
       if (r.data.code === 0) {
         this.comments = r.data.data!;
       }
     },
-    async createComment(id: string | number) {
+    async getHotComment(id: string | number) {
+      const r = await getHotCommentsById(id);
+      if (r.data.code === 0) {
+        this.hotComments = r.data.data!;
+      }
+    },
+    async createComment(
+      id: string | number,
+      content: string,
+      commentType: EditorType,
+      success?: () => void
+    ) {
       const r = await createComment({
-        type: this.commentType,
+        type: commentType,
         commentator: this.currUser.user.id,
         commented: id,
-        content: this.commentContent,
+        content: content,
       });
       if (r.data.code === 0) {
-        this.commentContent = '';
-        this.getComment(id);
+        success && success();
+        this.getComment(this.article.id);
+        this.getHotComment(this.article.id);
       }
     },
     async followUser_() {
@@ -276,25 +278,76 @@ export default Vue.extend({
       }
     },
     async likeArticle_() {
-      let count = this.article.likeds || 0;
-      const likes = this.currUser.user.likes || [];
-      const articleId = this.article.id;
+      const article = { ...this.article };
+      let count = article.likeds || 0;
+      const likes = article.likedIds || [];
+      const articleId = article.id;
       const r = await likeArticleById(articleId);
+      const userId = this.currUser.user.id;
       if (r.data.code === 0) {
-        if (likes.includes(articleId)) {
-          _.remove(likes, (id: string) => id === articleId);
-          this.$set(this.article, 'likeds', --count);
+        if (likes.includes(userId)) {
+          _.remove(likes, (id: string) => id === userId);
+          this.$set(article, 'likeds', --count);
         } else {
-          likes.push(articleId);
-          this.$set(this.article, 'likeds', ++count);
+          likes.push(userId);
+          this.$set(article, 'likeds', ++count);
         }
-        this.currUser.user.likes = [];
-        this.setCurrUser(this.currUser);
         this.$nextTick(() => {
-          this.currUser.user.likes = likes;
-          this.setCurrUser(this.currUser);
+          this.article = article;
         });
       }
+    },
+    async likeComment_(id: string) {
+      const r = await likeCommentById(id);
+      if (r.data.code === 0) {
+        this.likeById(id, this.comments);
+        this.likeById(id, this.hotComments);
+        const comments = [...this.comments];
+        const hotComments = [...this.hotComments];
+        this.comments = comments;
+        this.hotComments = hotComments;
+      }
+    },
+    async deleteComment(id: string) {
+      const r = await deleteComment(id);
+      if (r.data.code === 0) {
+        this.removeById(id, this.comments);
+        this.removeById(id, this.hotComments);
+        const comments = [...this.comments];
+        const hotComments = [...this.hotComments];
+        this.comments = comments;
+        this.hotComments = hotComments;
+      }
+    },
+    likeById(id: string, list: Comment_[]): boolean {
+      for (const item of list) {
+        if (item.id === id) {
+          if (item.likedIds.includes(this.currUser.user.id)) {
+            item.likeds--;
+            _.remove(item.likedIds, (id) => id === this.currUser.user.id);
+          } else {
+            item.likeds++;
+            item.likedIds.push(this.currUser.user.id);
+          }
+          return true;
+        }
+        const r = this.likeById(id, item.children!);
+        if (r) return r;
+      }
+      return false;
+    },
+    removeById(id: string, list: Comment_[]): boolean {
+      for (const item of list) {
+        if (item.id === id) {
+          _.remove(list, (e1) => e1.id === id);
+          return true;
+        }
+        if (item.children!.length > 0) {
+          const r = this.removeById(id, item.children!);
+          if (r) return true;
+        }
+      }
+      return false;
     },
     async collectArticle_() {
       let count = this.article.collectionVolume || 0;
@@ -323,6 +376,13 @@ export default Vue.extend({
       3000,
       { leading: true, trailing: false }
     ),
+    likeComment: _.debounce(
+      function (fun, id: string) {
+        fun(id);
+      },
+      3000,
+      { leading: true, trailing: false }
+    ),
     collectArticle: _.debounce(
       function (fun) {
         fun();
@@ -341,6 +401,10 @@ export default Vue.extend({
       }
     ),
   },
+  components: {
+    Editor: () => import('@/components/editor.vue'),
+    CommentList: () => import('@/components/commentList.vue'),
+  },
   created() {
     this.getArticle();
   },
@@ -348,8 +412,10 @@ export default Vue.extend({
 </script>
 <style lang="scss" scoped>
 .main {
+  padding: 0;
   display: grid;
-  grid-template-columns: 80px 800px 300px;
+  justify-content: center;
+  grid-template-columns: 80px minmax(500px, min(50%, 1000px)) 300px;
   grid-template-rows: auto auto auto;
   grid-template-areas:
     'a b c'
@@ -369,26 +435,7 @@ export default Vue.extend({
   min-height: 400px;
 }
 
-.comment-textarea {
-  z-index: 1;
-  background-color: #ffffff;
-}
-
-.comment-list {
-  .comment-item {
-    .comment-box {
-      border-radius: 4px;
-    }
-  }
-}
-
-.comment-fade-enter,
-.comment-fade-leave-to {
-  margin-top: -35px !important;
-}
-
-.comment-fade-enter-active,
-.comment-fade-leave-active {
-  transition: margin-top 0.3s ease-in;
+::v-deep .comment-editor .v-input {
+  font-size: 14px !important;
 }
 </style>

@@ -1,6 +1,7 @@
-import Vue from 'vue'
+import Vue from 'vue';
 declare module 'vue/types/vue' {
-    interface Vue {
-        formatDate: any
-    }
+  interface Vue {
+    formatDate: any;
+  }
 }
+

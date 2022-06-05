@@ -32,6 +32,10 @@ export const followUserById = (id: string) => {
 export const likeArticleById = (id: string) => {
   return http.get('/users/likeArticle/' + id);
 };
+// 点赞或取消点赞评论
+export const likeCommentById = (id: string) => {
+  return http.get('/users/likeComment/' + id);
+};
 
 // 收藏或取消收藏文章
 export const collectArticleById = (id: string) => {
@@ -43,8 +47,14 @@ export const incrementReading = (id: string) => {
   return http.get('/article/incrementReading/' + id);
 };
 // 根据id获取评论
-export const getCommentById = (id: string | number) => {
-  return http.get<ResponseData<Array<Comment>>>('/article/getComment/' + id);
+export const getCommentsById = (id: string | number) => {
+  return http.post<ResponseData<Array<Comment>>>('/article/getComment/' + id);
+};
+// 根据id获取热评
+export const getHotCommentsById = (id: string | number) => {
+  return http.post<ResponseData<Array<Comment>>>('/article/getComment/' + id, {
+    hot: { is: true },
+  });
 };
 
 // 保存头像
@@ -69,6 +79,13 @@ export const createArticle = (params: ArticleForm) => {
 // 创建评论
 export const createComment = (params: CommentForm) => {
   return http.post<ResponseData<null>>('/comment/create', params);
+};
+
+// 删除评论
+export const deleteComment = (id: string, isSoft = true) => {
+  return isSoft
+    ? http.get<ResponseData<null>>('comment/deleteWithSoft/' + id)
+    : http.get<ResponseData<null>>('comment/delete/' + id);
 };
 
 // 获取文章通过label

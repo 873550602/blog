@@ -39,7 +39,6 @@ declare interface User {
   email?: string;
   follows?: string[];
   followeds?: string[];
-  likes?: string[];
   sex?: 0 | 1;
   age?: number;
 }
@@ -64,9 +63,11 @@ declare interface Article extends ArticleForm {
   collectionIds?: string[];
   commentVolume?: number;
   likeds?: number;
+  likedIds?: string[];
+  children?: Comment[];
 }
 
-declare interface ArticlePageList extends PageResponse<Article> {}
+type ArticlePageList = PageResponse<Article>;
 
 declare interface CommentForm {
   content: string;
@@ -80,6 +81,7 @@ declare interface Comment extends CommentForm {
   createTime: number;
   updateTime?: number;
   likeds: number;
+  likedIds: string[];
   commentator: string | User;
   commented: string | Comment | Article;
 }
